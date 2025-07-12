@@ -1,15 +1,24 @@
 import { Input } from "@/components/ui/input"
 import Header from "./_components/header"
-import { Button } from "./_components/ui/button"
-import { SearchIcon, Scissors, Car } from "lucide-react"
+import { SearchIcon } from "lucide-react"
 import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage } from "@radix-ui/react-avatar"
+import { Button } from "@/components/ui/button"
+import { db } from "./_lib/prisma"
+import BarbershopItem from "./_components/barbershop-item"
+import Footer from "./_components/footer"
+import { quickSearchOptions } from "./_constants/quickSearchOption"
+import BookingItem from "./_components/booking-item"
 
-export default function Home() {
+const Home = async () => {
+  const barbershops = await db.barberShop.findMany({})
+  const popularBarbershops = await db.barberShop.findMany({
+    orderBy: {
+      name: "desc",
+    },
+  })
+
   return (
-    <div>
+    <div className="overflow-y-hidden">
       <Header />
 
       <div className="p-5">
@@ -28,27 +37,25 @@ export default function Home() {
           </Button>
         </div>
 
-        <div className="mt-6 flex gap-2 overflow-x-auto">
-          <Button
-            variant="outline"
-            className="gap-2 rounded-full px-4 py-2 text-sm"
-          >
-            <Scissors size={16} />
-            Cabelo
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2 rounded-full px-4 py-2 text-sm"
-          >
-            Barba
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2 rounded-full px-4 py-2 text-sm"
-          >
-            <Car size={16} />
-            Acabamento
-          </Button>
+        <div className="mt-6 flex gap-3 overflow-x-scroll [&::-webkit-scrollbar]:hidden">
+          {quickSearchOptions.map((option) => (
+            <Button
+              className="gap-2"
+              variant="secondary"
+              key={option.title}
+              asChild
+            >
+              <span className="flex items-center gap-2">
+                <Image
+                  src={option.imageUrl}
+                  width={16}
+                  height={16}
+                  alt={option.title}
+                />
+                {option.title}
+              </span>
+            </Button>
+          ))}
         </div>
 
         <div className="relative mt-6 h-[150px] w-full">
@@ -60,31 +67,30 @@ export default function Home() {
           />
         </div>
 
-        <Card className="mt-6">
-          <CardContent className="flex justify-between">
-            <div className="flex flex-col gap-2 py-1">
-              <Badge className="w-fit">Confirmado</Badge>
-              <h3 className="font-semibold">Corte de Cabelo</h3>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="@shadcn"
-                    className="rounded-full object-cover"
-                  />
-                </Avatar>
-                <p className="text-sm font-medium">Barbearia FSW</p>
-              </div>
-            </div>
+        <BookingItem />
 
-            <div className="flex flex-col items-center justify-center border-l-2 border-solid px-5">
-              <p className="text-sm">Julho</p>
-              <p className="text-2xl">5</p>
-              <p className="text-sm">10:00</p>
-            </div>
-          </CardContent>
-        </Card>
+        <h2 className="mt-6 mb-3 text-xs font-medium text-gray-400 uppercase">
+          Recomendados
+        </h2>
+
+        <div className="flex gap-4 overflow-auto [&::-webkit-scrollbar]:hidden">
+          {barbershops.map((barbershop) => (
+            <BarbershopItem key={barbershop.id} barbershop={barbershop} />
+          ))}
+        </div>
+        <h2 className="mt-6 mb-3 text-xs font-medium text-gray-400 uppercase">
+          Populares
+        </h2>
+
+        <div className="flex gap-4 overflow-auto [&::-webkit-scrollbar]:hidden">
+          {popularBarbershops.map((barbershop) => (
+            <BarbershopItem key={barbershop.id} barbershop={barbershop} />
+          ))}
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }
+
+export default Home
